@@ -1,0 +1,9 @@
+class CustomValidationError extends Error{
+
+
+
+
+}
+
+
+
