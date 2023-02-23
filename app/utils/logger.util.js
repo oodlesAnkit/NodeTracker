@@ -28,9 +28,10 @@ const errorLogConfiguration = {
     }),
   ],
   format: winston.format.combine(
+    // winston.format.stack({ stack: true }),
     winston.format.timestamp(),
     winston.format.printf((error) => {
-      return `[${error.timestamp}] [${error.level}] ${error.message}`;
+      return `[${error.timestamp}] [${error.level}] ${error.message} ${error.stack}`;
     })
   ),
 };

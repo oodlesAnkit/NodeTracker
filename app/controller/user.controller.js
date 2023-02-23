@@ -11,6 +11,7 @@ const { JWT_SECERT, JWT_EXPRIES_IN } = require("../../config/envs");
 const jwt = require("jsonwebtoken");
 const requstIp = require("request-ip");
 const { logger, errorLogger } = require("../utils/logger.util");
+const { CustomValidationError } = require("../errors/custom_validation_error");
 
 const clientIp = require("get-client-ip");
 
@@ -19,8 +20,14 @@ class User {
     logger.info("user create - started");
     const { error } = validateCreateUser(req.body);
     if (error) {
-      errorLogger.error("user create - " + error);
-      return res.send({ err: error.details[0].message }, 400);
+      throw new CustomValidationError(
+        error.details[0].message,
+        req.user?.id,
+        req.params,
+        req.body
+      );
+      // errorLogger.error("user create - " + error);
+      // return res.send({ err: error.details[0].message }, 400);
     }
 
     const existingUser = await user.findOne({
@@ -61,9 +68,9 @@ class User {
     const { error: bodyError } = valiateLoginDetails(req.body);
 
     if (bodyError) {
-        throw new Error(bodyError.details[0].message,req,res);
-    //   console.log(bodyError.details[0].message);
-    //   return res.send({ err: bodyError.details[0].message }, 400);
+      throw new Error(bodyError.details[0].message, req, res);
+      //   console.log(bodyError.details[0].message);
+      //   return res.send({ err: bodyError.details[0].message }, 400);
     }
     const { username, password } = req.body;
 
