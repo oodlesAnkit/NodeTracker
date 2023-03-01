@@ -6,14 +6,14 @@ module.exports = (err, req, res, next) => {
 
 
   console.log("asdasdasd");
-  errorLogger.error(err.message);
+  errorLogger.error(err.stack);
 
 
   if (err instanceof CustomValidationError) {
     return res.status(err.status).send({
       success: false,
-      message: err.message,
-      error: err,
+      message: err.message.details,
+      error: err.stack,
     });
   }
 

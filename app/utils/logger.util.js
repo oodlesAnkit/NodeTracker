@@ -1,4 +1,6 @@
 const winston = require("winston");
+const {format}=require('winston');
+const {errors}=format;
 
 const CATEGORY = "index";
 
@@ -28,7 +30,8 @@ const errorLogConfiguration = {
     }),
   ],
   format: winston.format.combine(
-    // winston.format.stack({ stack: true }),
+    // errors({ stack: true }),
+    winston.format.errors({ stack: true }),
     winston.format.timestamp(),
     winston.format.printf((error) => {
       return `[${error.timestamp}] [${error.level}] ${error.message} ${error.stack}`;

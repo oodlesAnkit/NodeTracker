@@ -14,6 +14,7 @@ const { logger, errorLogger } = require("../utils/logger.util");
 const { CustomValidationError } = require("../errors/custom_validation_error");
 
 const clientIp = require("get-client-ip");
+const { UnauthorizedUserError } = require("../errors/unautherized_user_error");
 
 class User {
   async create(req, res) {
@@ -21,7 +22,8 @@ class User {
     const { error } = validateCreateUser(req.body);
     if (error) {
       throw new CustomValidationError(
-        error.details[0].message,
+        error,
+        500,
         req.user?.id,
         req.params,
         req.body
@@ -39,11 +41,25 @@ class User {
     console.log(existingUser);
     if (existingUser) {
       if (existingUser.username === req.body.username) {
-        errorLogger.error("Create User - Username alreay exits");
-        return res.send({ err: "Username alreay exits" }, 409);
+        throw new CustomValidationError(
+          error,
+          500,
+          req.user?.id,
+          req.params,
+          req.body
+        );
+        // errorLogger.error("Create User - Username alreay exits");
+        // return res.send({ err: "Username alreay exits" }, 409);
       } else if (existingUser.email === req.body.email) {
-        errorLogger.error("Create User - Username alreay exits");
-        return res.send({ err: "Email is already in use" }, 409);
+        throw new CustomValidationError(
+          error,
+          500,
+          req.user?.id,
+          req.params,
+          req.body
+        );
+        // errorLogger.error("Create User - Username alreay exits");
+        // return res.send({ err: "Email is already in use" }, 409);
       }
     }
 
@@ -68,8 +84,13 @@ class User {
     const { error: bodyError } = valiateLoginDetails(req.body);
 
     if (bodyError) {
-      throw new Error(bodyError.details[0].message, req, res);
-      //   console.log(bodyError.details[0].message);
+      throw new CustomValidationError(
+        bodyError,
+        500,
+        req.user?.id,
+        req.params,
+        req.body
+      );      //   console.log(bodyError.details[0].message);
       //   return res.send({ err: bodyError.details[0].message }, 400);
     }
     const { username, password } = req.body;
@@ -81,7 +102,6 @@ class User {
     });
 
     if (userFound) {
-      console.log(password);
       const isCorrectPassword = bcrypt.compareSync(
         password,
         userFound.password
@@ -100,9 +120,13 @@ class User {
           isIpBlocked.isIpBlocked &&
           isIpBlocked.isIpBlocked == "true"
         ) {
-          return res.status(522).send({
-            messaage: req.body.ip + " is blocked for " + userFound.email,
-          });
+
+
+          logger.info(req.body.ip + " is blocked for " + userFound.email);
+          throw new UnauthorizedUserError('User is blocked');
+          // return res.status(522).send({
+          //   messaage: req.body.ip + " is blocked for " + userFound.email,
+          // });
         }
 
         const token = jwt.sign({ id: userFound.id }, JWT_SECERT, {
